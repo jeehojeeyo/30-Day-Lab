@@ -1,0 +1,149 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>30일 실험실</title>
+<style>
+:root{--bg:#f5f2ea;--card:#fffdf8;--ink:#2e3835;--mut:#7a837f;--ac:#587a6f;--ac2:#e3ebe5;--ln:#e2ddd0;--warm:#b98a5e;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c2321;--card:#252d2a;--ink:#e6ebe8;--mut:#93a09a;--ac:#8fb5a8;--ac2:#2f3b37;--ln:#38433f;--warm:#d4a574;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1c2321;--card:#252d2a;--ink:#e6ebe8;--mut:#93a09a;--ac:#8fb5a8;--ac2:#2f3b37;--ln:#38433f;--warm:#d4a574;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 "Noto Sans KR",-apple-system,"Apple SD Gothic Neo",sans-serif}
+#app{max-width:640px;margin:0 auto;padding:18px 16px 96px}
+h1,h2,h3{font-family:"Noto Serif KR",Georgia,serif;font-weight:600;margin:.2em 0 .4em}h1{font-size:22px}h2{font-size:19px}h3{font-size:16px;margin-top:1.2em}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:16px;margin:0 0 14px}
+.mut{color:var(--mut);font-size:13px}.note{background:var(--ac2);border-radius:10px;padding:10px 12px;font-size:13.5px}
+.toast{background:var(--ac);color:#fff;border-radius:10px;padding:9px 12px;margin-bottom:12px;font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin:8px 0}
+.stats div{background:var(--ac2);border-radius:10px;padding:10px;text-align:center}.stats b{display:block;font-size:19px}.stats span{font-size:12px;color:var(--mut)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 0;flex-wrap:wrap}.row label{flex:1 1 180px}
+.sc{display:flex;gap:6px}.sc button,.seg button{border:1px solid var(--ln);background:var(--card);color:var(--ink);border-radius:9px;min-width:40px;height:40px;font:inherit;cursor:pointer}
+.sc button.on,.seg button.on{background:var(--ac);color:#fff;border-color:var(--ac)}.seg{display:flex;gap:6px}.seg button{padding:0 14px}
+input,textarea,select{width:100%;border:1px solid var(--ln);background:var(--card);color:var(--ink);border-radius:9px;padding:9px;font:inherit}textarea{min-height:64px;resize:vertical}input[type=number]{width:100px}
+button.pri{background:var(--ac);color:#fff;border:0;border-radius:10px;padding:11px 18px;font:inherit;cursor:pointer}button.gh{background:none;color:var(--ac);border:1px solid var(--ac);border-radius:10px;padding:10px 16px;font:inherit;cursor:pointer;margin:4px 6px 4px 0}
+.chip{display:inline-block;border:1px solid var(--ln);border-radius:99px;padding:5px 12px;margin:3px 4px 3px 0;font-size:13px;cursor:pointer;background:var(--card)}
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}.grid button{aspect-ratio:1;border:1px solid var(--ln);background:var(--card);color:var(--ink);border-radius:10px;font:inherit;cursor:pointer}.grid .rec{background:var(--ac);color:#fff;border-color:var(--ac)}.grid button:disabled{opacity:.35}
+.bar{height:8px;background:var(--ac2);border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ac)}
+table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:7px 4px;border-bottom:1px solid var(--ln);text-align:center}th:first-child,td:first-child{text-align:left}
+ul{padding-left:18px;margin:.3em 0}li{margin:.35em 0}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--ln);display:flex;padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;border:0;background:none;color:var(--mut);padding:12px 2px;font:inherit;font-size:13px;cursor:pointer}nav button.on{color:var(--ac);font-weight:700}
+.leg{font-size:12px;color:var(--mut)}
+.q{margin:10px 0;padding:12px 14px;border-left:3px solid var(--ac);background:var(--ac2);border-radius:0 10px 10px 0;font-family:"Noto Serif KR",Georgia,serif;line-height:1.9}
+.sg{background:var(--ac2);border-radius:12px;padding:12px;margin:10px 0}.sg p{margin:.4em 0}
+.must{border:2px solid var(--ac)}.soft{border-style:dashed;background:transparent}
+.ft{text-align:center;color:var(--mut);font-size:12px;margin:28px 0 8px}
+</style></head><body><div id="app"></div>
+<nav><button data-t="today" onclick="go('today')">오늘</button><button data-t="exp" onclick="go('exp')">실험</button><button data-t="log" onclick="go('log')">기록</button><button data-t="ana" onclick="go('ana')">분석</button><button data-t="hist" onclick="go('hist')">실험 기록</button></nav>
+<script>
+const K='lab30.v1',P2=n=>String(n).padStart(2,'0'),$=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function td(d=new Date()){return d.getFullYear()+'-'+P2(d.getMonth()+1)+'-'+P2(d.getDate())}
+const pd=s=>new Date(s+'T00:00:00'),addD=(s,n)=>{const d=pd(s);d.setDate(d.getDate()+n);return td(d)},dif=(a,b)=>Math.round((pd(a)-pd(b))/864e5);
+const num=v=>typeof v==='number'&&!isNaN(v),avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null,f1=v=>v==null?'–':v.toFixed(1);
+let S={phases:[],logs:{}},tab='today',editDate=td(),draft={},viewId=null,msg='',bk='',cf='';
+try{const j=JSON.parse(localStorage.getItem(K));if(j&&Array.isArray(j.phases)&&j.logs)S=j}catch(e){}
+draft={...(S.logs[editDate]||{})};
+function save(){try{localStorage.setItem(K,JSON.stringify(S))}catch(e){msg='이 브라우저에서는 저장이 어려워요. 백업을 자주 해 주세요.'}}
+const act=()=>S.phases.find(p=>p.status==='active'),P=id=>S.phases.find(p=>p.id===id);
+const plogs=p=>Object.entries(S.logs).filter(([d,l])=>l.pid===p.id).map(([d,l])=>({...l,d,i:dif(d,p.start)})).sort((a,b)=>a.d<b.d?-1:1);
+const pname=p=>p.type==='observe'?'나를 관찰하는 30일':'30일 실험 '+P2(p.n)+(p.title?' · '+p.title:'');
+const BOOL=[['meal','식사를 규칙적으로 했어요'],['out','밖에 나갔어요'],['talk','사람과 대화했어요'],['move','몸을 움직였어요'],['focus','집중해서 무언가를 했어요'],['self','나를 위해 한 일이 있었어요']];
+const SN={out:'외출',talk:'대화',move:'몸을 움직임',focus:'집중',self:'나를 위한 시간',meal:'규칙적인 식사'};
+const LB={out:'외출한',talk:'사람과 대화한',move:'몸을 움직인',focus:'집중한 활동이 있던',self:'나를 위해 한 일이 있던',meal:'식사를 규칙적으로 한'};
+const SUG={out:['하루 10분 밖에 나가기','하루 10분이라도 밖에 나가면 기분이 조금 나아질 수 있다.'],talk:['하루 한 번 사람과 짧게 대화하기','짧게라도 사람과 대화하면 기분이 나아질 수 있다.'],move:['하루 10분 몸 움직이기','잠깐이라도 몸을 움직이면 기분이나 에너지가 나아질 수 있다.'],focus:['하루 한 번 집중하는 시간 갖기','집중해서 무언가를 하는 시간이 있으면 기분이 나아질 수 있다.'],self:['하루 한 번 나를 위한 시간 갖기','나를 위한 시간을 가지면 기분이 나아질 수 있다.'],meal:['식사 시간을 일정하게 유지하기','규칙적으로 식사하면 에너지가 나아질 수 있다.']};
+const SC=[['sleepQ','수면 만족도'],['mood','오늘의 기분'],['energy','오늘의 에너지']];
+function cap(){document.querySelectorAll('[data-t]').forEach(e=>{draft[e.dataset.t]=e.dataset.n?(e.value===''?undefined:parseFloat(e.value)):e.value})}
+function setS(k,n){cap();draft[k]=draft[k]===n?undefined:n;render()}
+function setB(k,v){cap();draft[k]=draft[k]===v?undefined:v;render()}
+function go(t){tab=t;viewId=null;cf='';render();scrollTo(0,0)}
+function openDate(d){editDate=d;draft={...(S.logs[d]||{})};tab='today';render();scrollTo(0,0)}
+function view(id){viewId=id;tab='hist';render();scrollTo(0,0)}
+function ask(k){cf=k;render()}
+/* ---------- 오늘 ---------- */
+const sRow=k=>{const n=SC.find(x=>x[0]===k)[1];return `<div class="row"><label>${n}<div class="mut">1 낮음 · 3 보통 · 5 높음</div></label><div class="sc">${[1,2,3,4,5].map(v=>`<button class="${draft[k]===v?'on':''}" onclick="setS('${k}',${v})">${v}</button>`).join('')}</div></div>`};
+function vToday(){const p=act();
+ if(!p)return '<div class="card"><h2>오늘의 관찰</h2><p>아직 진행 중인 구간이 없어요. 「실험」 탭에서 시작할 수 있어요.</p></div>';
+ const day=dif(editDate,p.start)+1,ex=p.type==='experiment'&&day>=1;
+ let h=`<div class="card"><div class="mut">${esc(pname(p))}</div><h2>${editDate===td()?'오늘':editDate}의 기록</h2><p class="mut">${editDate} ${day>=1?'· '+day+'일째':'· 새 구간은 '+p.start+'부터 시작해요'}</p><p class="note">오늘 하루를 한번 관찰해볼까요? 적고 싶은 것만 적어도 괜찮아요. 기록하지 못한 날도, 아무것도 하지 않은 날도 괜찮아요. 모두 소중한 관찰이에요.</p></div><div class="card must"><h3>오늘 꼭 기록할 것</h3><p class="mut">힘든 날에는 이 둘만 기록하고 나가도 괜찮아요.</p>${sRow('mood')}${sRow('energy')}<button class="pri" onclick="saveDay()">이것만 저장하고 나가기</button></div><div class="card"><h3>오늘의 생활 관찰</h3><p class="mut">기억나는 것만 골라서 적어도 돼요.</p><div class="row"><label>수면 시간 (시간)</label><input type="number" step="0.5" min="0" max="24" data-t="sleepH" data-n="1" value="${num(draft.sleepH)?draft.sleepH:''}"></div>`;
+ SC.forEach(([k,n],i)=>{if(k!=='sleepQ')return;h+=`<div class="row"><label>${n}<div class="mut">1 낮음 · 3 보통 · 5 높음</div></label><div class="sc">${[1,2,3,4,5].map(v=>`<button class="${draft[k]===v?'on':''}" onclick="setS('${k}',${v})">${v}</button>`).join('')}</div></div>`});
+ h+='<hr style="border:0;border-top:1px solid var(--ln)">';
+ const B=BOOL.slice();if(ex)B.push(['act','이번 실험의 행동을 했어요: '+p.change]);
+ B.forEach(([k,n])=>h+=`<div class="row"><label>${esc(n)}</label><div class="seg"><button class="${draft[k]===true?'on':''}" onclick="setB('${k}',true)">예</button><button class="${draft[k]===false?'on':''}" onclick="setB('${k}',false)">아니요</button></div></div>`);
+ h+=`</div><div class="card soft"><h3>더 기록하고 싶다면</h3><p class="mut">마음이 내킬 때만 적어요. 비워 두어도 괜찮아요.</p>${[['hard','오늘 가장 힘들었던 것'],['good','오늘 괜찮았던 것'],['memo','자유 메모']].map(([k,n])=>`<h3>${n}</h3><textarea data-t="${k}">${esc(draft[k]||'')}</textarea>`).join('')}</div><button class="pri" onclick="saveDay()">오늘의 기록 저장하기</button>`;
+ return h}
+function saveDay(){cap();const l={};for(const k in draft)if(draft[k]!==undefined&&draft[k]!==''&&k!=='pid')l[k]=draft[k];
+ if(!Object.keys(l).length){msg='아직 적은 내용이 없어요. 기록하지 못한 날도 괜찮아요.';return render()}
+ const p=act(),old=S.logs[editDate];
+ l.pid=(old&&old.pid)||(p&&editDate>=p.start?p.id:([...S.phases].reverse().find(q=>q.start<=editDate)||p).id);
+ S.logs[editDate]=l;save();if(!msg)msg='저장했어요. 오늘의 관찰이 하나 쌓였어요.';editDate=td();draft={...(S.logs[editDate]||{})};render();scrollTo(0,0)}
+/* ---------- 분석 ---------- */
+function chart(list,days){list=list.filter(l=>l.i>=0);const W=320,H=110,mx=Math.max(days,...list.map(l=>l.i+1)),x=i=>12+i*(W-24)/Math.max(mx-1,1),y=v=>H-10-(v-1)*(H-20)/4;
+ let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="일별 기록 그래프">`;
+ for(let v=1;v<=5;v+=2)s+=`<line x1="12" x2="${W-12}" y1="${y(v)}" y2="${y(v)}" stroke="var(--ln)"/>`;
+ [['mood','var(--ac)'],['energy','var(--warm)'],['sleepQ','var(--mut)']].forEach(([k,c])=>{let d='',last=-9,pts='';list.forEach(l=>{if(!num(l[k]))return;d+=(l.i===last+1?'L':'M')+x(l.i).toFixed(1)+' '+y(l[k]).toFixed(1)+' ';last=l.i;pts+=`<circle cx="${x(l.i).toFixed(1)}" cy="${y(l[k]).toFixed(1)}" r="2.5" fill="${c}"/>`});s+=`<path d="${d}" fill="none" stroke="${c}" stroke-width="1.8"/>${pts}`});
+ return s+'</svg><div class="leg"><span style="color:var(--ac)">● 기분</span> &nbsp;<span style="color:var(--warm)">● 에너지</span> &nbsp;<span style="color:var(--mut)">● 수면 만족도</span> · 비어 있는 곳은 기록하지 않은 날이에요</div>'}
+function insights(list){const F=[],G=[],U=[],SG=[],n=list.length,M=(k)=>list.filter(l=>num(l[k]));
+ if(n<5)return {F,G,SG,nF:0,U:['기록이 아직 5일보다 적어서 패턴을 판단하기 어렵습니다. 조금 더 관찰해볼까요?']};
+ const grp=(k,m)=>{const a=list.filter(l=>l[k]===true&&num(l[m])).map(l=>l[m]),b=list.filter(l=>l[k]===false&&num(l[m])).map(l=>l[m]);return a.length>=3&&b.length>=3?[avg(a),avg(b)]:null};
+ const say=(arr,k,m,mn)=>{const r=grp(k,m);if(!r){U.push(`‘${SN[k]}’와(과) ${mn}의 관계는 기록이 부족해서 판단하기 어렵습니다.`);return}const d=r[0]-r[1];if(d>=0.3&&SUG[k])SG.push({o:'기록상 '+LB[k]+' 날의 평균 '+mn+' 점수가 상대적으로 높았습니다.',c:SUG[k][0],h:SUG[k][1],k:k,m:m});const v=`(${f1(r[0])} vs ${f1(r[1])})`;arr.push(Math.abs(d)<0.3?`${LB[k]} 날과 그렇지 않은 날의 평균 ${mn} 점수 차이는 크지 않았습니다 ${v}.`:`기록상 ${LB[k]} 날의 평균 ${mn} 점수가 그렇지 않은 날보다 ${d>0?'높았습니다':'낮았습니다'} ${v}.`)};
+ ['out','talk','move','focus','self'].forEach(k=>say(F,k,'mood','기분'));const nF=F.length;
+ ['meal','move'].forEach(k=>say(G,k,'energy','에너지'));
+ const hi=list.filter(l=>l.sleepQ>=4&&num(l.energy)).map(l=>l.energy),lo=list.filter(l=>l.sleepQ<=3&&num(l.energy)).map(l=>l.energy);
+ if(hi.length>=3&&lo.length>=3){const d=avg(hi)-avg(lo);if(d>=0.3)SG.push({o:'기록상 수면 만족도가 높은 날 에너지도 높은 경향이 있었습니다.',k:'sleep',m:'sleep',c:'취침 시간을 일정하게 유지해보기',h:'취침 시간이 일정하면 수면 만족도와 에너지가 나아질 수 있다.'});G.push(Math.abs(d)<0.3?'수면 만족도가 높았던 날과 낮았던 날의 에너지 점수 차이는 크지 않았습니다.':`수면 만족도가 높았던 날(4점 이상)에는 에너지 점수가 ${d>0?'높은':'낮은'} 경향이 있었습니다 (${f1(avg(hi))} vs ${f1(avg(lo))}).`)}else U.push('수면 만족도와 에너지의 관계는 기록이 부족해서 판단하기 어렵습니다.');
+ const sh=list.filter(l=>num(l.sleepH)&&num(l.energy));if(sh.length>=6){const hs=sh.map(l=>l.sleepH).sort((a,b)=>a-b),md=hs[Math.floor(hs.length/2)],lg=sh.filter(l=>l.sleepH>=md).map(l=>l.energy),sr=sh.filter(l=>l.sleepH<md).map(l=>l.energy);if(lg.length>=3&&sr.length>=3){const d=avg(lg)-avg(sr);G.push(Math.abs(d)<0.3?'수면 시간이 긴 날과 짧은 날의 에너지 점수 차이는 크지 않았습니다.':`수면 시간이 긴 날(${md}시간 이상)의 평균 에너지 점수가 ${d>0?'더 높았습니다':'더 낮았습니다'} (${f1(avg(lg))} vs ${f1(avg(sr))}).`)}}else U.push('수면 시간과 에너지의 관계는 기록이 부족해서 판단하기 어렵습니다.');
+ const top=list.filter(l=>l.mood>=4),low=list.filter(l=>l.mood<=2);
+ if(top.length>=3){const c=Object.keys(SN).filter(k=>top.filter(l=>l[k]===true).length/top.length>=.67);if(c.length)F.push(`기분이 높았던 날(${top.length}일)에는 ${c.map(k=>'‘'+SN[k]+'’').join(', ')} 기록이 자주 있었습니다.`)}
+ if(low.length>=3){const c=Object.keys(SN).filter(k=>low.filter(l=>l[k]===false).length/low.length>=.67);if(c.length)F.push(`기분이 낮았던 날(${low.length}일)에는 ${c.map(k=>'‘'+SN[k]+'’').join(', ')} 기록이 ‘아니요’인 경우가 많았습니다.`)}
+ const fr=Object.keys(SN).map(k=>[k,list.filter(l=>l[k]===true).length]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,2);
+ if(fr.length)F.push(`가장 자주 기록된 행동: ${fr.map(x=>SN[x[0]]+' '+x[1]+'일').join(', ')}.`);
+ return {F,G,U,SG,nF}}
+const NG={out:'외출하지 않은',talk:'사람과 대화하지 않은',move:'몸을 움직이지 않은',focus:'집중한 활동이 없던',self:'나를 위해 한 일이 없던',meal:'식사가 불규칙한'};
+const tend=(L,v)=>Object.keys(LB).map(k=>{const a=L.filter(l=>typeof l[k]==='boolean');if(a.length<3)return null;const y=a.filter(l=>l[k]).length,m=v?y:a.length-y;return m/a.length>=.6?`${(v?LB:NG)[k]} 날이 많았어요 (${m}/${a.length}일)`:null}).filter(Boolean);
+function dayBlock(L,txt,key,v){if(L.length<3)return `<p class="mut">기분 점수가 ${txt}인 날이 3일보다 적어서 공통점을 판단하기 어렵습니다 (${L.length}일).</p>`;const c=tend(L,v),memos=L.map(l=>l[key]).filter(Boolean).slice(0,3);return `<p class="mut">기분 점수 ${txt} · ${L.length}일</p>`+ul(c.length?c:['뚜렷한 공통점은 아직 보이지 않아요.'])+(memos.length?'<p class="mut">그날 내가 적어둔 말</p>'+ul(memos.map(t=>'“'+t.slice(0,80)+'”')):'')}
+function report(p){const list=plogs(p),M=k=>list.map(l=>l[k]).filter(num),r=insights(list),fq=tend(list,true).concat(tend(list,false)),done=p.status==='done';
+ return `<div class="card"><h2>나의 첫 30일</h2><div class="mut">리포트 · ${p.start} 시작 · ${done?'마무리됨':'진행 중'}</div><p class="note">이 리포트는 평가가 아니라, 나를 이해하기 위한 관찰 노트예요. 기록을 비교한 것일 뿐 원인을 단정하지 않아요.</p><h3>내가 기록한 30일</h3><div class="stats">${[['기록한 날',list.length+'일'],['평균 기분',f1(avg(M('mood')))],['평균 에너지',f1(avg(M('energy')))],['평균 수면 만족도',f1(avg(M('sleepQ')))]].map(x=>`<div><b>${x[1]}</b><span>${x[0]}</span></div>`).join('')}</div>${list.length?chart(list,p.days):''}<h3>내가 발견한 패턴</h3>${ul(r.F.slice(0,r.nF))}<h3>나의 좋은 날</h3>${dayBlock(list.filter(l=>l.mood>=4),'4점 이상','good',true)}<h3>나의 힘든 날</h3>${dayBlock(list.filter(l=>l.mood<=2),'2점 이하','hard',false)}<h3>자주 나타난 나의 모습</h3>${ul(fq.length?fq:['아직 뚜렷하게 자주 나타난 모습은 없어요.'])}<h3>나에게 영향을 줄 가능성이 있는 요소</h3>${ul(r.G)}<h3>아직 알 수 없는 것</h3>${ul(r.U)}<h3>내가 30일 동안 알게 된 나</h3><textarea oninput="P('${p.id}').learned=this.value;save()" placeholder="자유롭게 적어보세요">${esc(p.learned)}</textarea></div>`+(done&&!act()?'<button class="pri" onclick="go(\'exp\')">다음 30일에는 무엇을 실험해볼까요?</button>':'<p class="mut">30일 관찰이 끝나면 ‘실험’ 탭의 ‘30일 관찰을 마치고 결과 보기’로 리포트를 완성하고, 다음 30일을 고를 수 있어요.</p>')}
+let foc=null;
+const FOC={mood:'기분',energy:'에너지',sleep:'수면',out:'외출/활동',talk:'사람과의 연결',self:'나를 위한 시간',unsure:'아직 잘 모르겠다'};
+const FM={mood:s=>s.m==='mood',energy:s=>s.m==='energy',sleep:s=>s.k==='sleep',out:s=>s.k==='out'||s.k==='move',talk:s=>s.k==='talk',self:s=>s.k==='self'||s.k==='focus',unsure:()=>true};
+const inFoc=s=>FM[foc]?FM[foc](s):true;
+const chooser=()=>`<h3>첫 30일을 돌아보며, 다음 30일에 무엇을 살펴보고 싶나요?</h3><p class="mut">하나를 골라보세요. 고른 영역과 기록에서 보인 경향을 함께 참고해서 작은 실험을 보여드려요.</p><div>${Object.keys(FOC).map(k=>`<span class="chip" onclick="foc='${k}';render()">${FOC[k]}</span>`).join('')}</div>`;
+function sugHTML(){const q=[...S.phases].reverse().find(p=>p.status==='done');if(!q)return '';const r=insights(plogs(q)),seen={},L=r.SG.filter(s=>inFoc(s)&&!seen[s.c]&&(seen[s.c]=1));return `<p>살펴보고 싶은 것: <b>${FOC[foc]}</b> <button class="gh" onclick="foc=null;render()">다시 고르기</button></p><p class="leg">관찰 → 발견 → 가설 → 작은 변화 → 기록 → 비교 → 다음 실험</p><p class="note">기록상 이런 경향이 있었으니 한번 실험해볼 수 있어요. 효과를 보장하는 것은 아니고, 직접 해보며 나에게 맞는지 살펴보는 거예요.</p>`+(L.length?L.map(s=>`<div class="sg"><p>${esc(s.o)}</p><p class="mut">다음 30일에 이런 작은 실험을 해볼 수 있어요.</p><p><b>${esc(s.c)}</b></p><p class="mut">이것이 실제로 나에게 도움이 되는지는 30일 동안 직접 관찰해봅니다.</p><button class="gh" onclick="sug('${s.c}','${s.h}')">이 실험으로 정하기</button></div>`).join(''):'<p class="mut">선택한 영역에서는 기록상 뚜렷한 경향이 아직 보이지 않아요. 괜찮아요. 아래 아이디어로 가볍게 시작해볼 수 있어요.</p>')}
+const ul=a=>a.length?'<ul>'+a.map(t=>`<li>${esc(t)}</li>`).join('')+'</ul>':'<p class="mut">아직 뚜렷하게 보이는 것이 없어요.</p>';
+function anaHTML(p){const list=plogs(p),M=k=>list.map(l=>l[k]).filter(num),r=insights(list);
+ return `<div class="stats">${[['기록한 날',list.length+'일'],['평균 기분',f1(avg(M('mood')))],['평균 에너지',f1(avg(M('energy')))],['평균 수면 만족도',f1(avg(M('sleepQ')))]].map(x=>`<div><b>${x[1]}</b><span>${x[0]}</span></div>`).join('')}</div>${list.length?chart(list,p.days):''}<h3>발견한 패턴</h3>${ul(r.F)}<h3>나에게 영향을 줄 가능성이 있는 요소</h3>${ul(r.G)}<h3>아직 모르는 것</h3>${ul(r.U)}<p class="mut">※ 이 앱의 분석은 기록을 비교한 것일 뿐, 원인을 단정하지 않아요.</p>`}
+function vAna(){const p=act()||S.phases[S.phases.length-1];if(!p)return '<div class="card"><h2>분석</h2><p>기록이 쌓이면 이곳에서 패턴을 볼 수 있어요.</p></div>';
+ return `<div class="card"><div class="mut">${esc(pname(p))}</div><h2>지금까지 관찰된 것</h2><p class="note">지금까지의 기록을 기준으로 한 분석이에요.</p>${anaHTML(p)}</div>`}
+/* ---------- 결과 ---------- */
+function vResult(p){const list=plogs(p),idx=S.phases.indexOf(p),prev=idx>0?S.phases[idx-1]:null;let h=`<button class="gh" onclick="viewId=null;render()">← 목록으로</button>`;
+ if(p.type==='observe'){return h+report(p);h+=`<div class="card"><h2>나의 첫 30일</h2><div class="mut">${p.start} 시작 · ${p.status==='active'?'진행 중':'마무리됨'}</div><h3>내가 관찰한 것</h3>${anaHTML(p)}<h3>내가 알게 된 나</h3><textarea oninput="P('${p.id}').learned=this.value;save()" placeholder="자유롭게 적어보세요">${esc(p.learned)}</textarea></div>`;return h}
+ const M=(L,k)=>L.map(l=>l[k]).filter(num),bf=prev?plogs(prev):[],rows=[['mood','기분'],['energy','에너지'],['sleepQ','수면 만족도']].map(([k,n])=>{const a=avg(M(bf,k)),b=avg(M(list,k));return `<tr><td>${n}</td><td>${f1(a)}</td><td>${f1(b)}</td><td>${a!=null&&b!=null?(b-a>=0?'+':'')+f1(b-a):'–'}</td></tr>`}).join('');
+ const ac=list.filter(l=>l.act===true).length,sm=[];
+ if(list.length<5||bf.length<5)sm.push('기록이 충분하지 않아 변화를 판단하기 어렵습니다.');else[['mood','기분'],['energy','에너지'],['sleepQ','수면 만족도']].forEach(([k,n])=>{const a=avg(M(bf,k)),b=avg(M(list,k));if(a==null||b==null)return;const d=b-a;sm.push(`이번 실험에서는 평균 ${n} 점수가 실험 전보다 ${Math.abs(d)<0.3?'비슷한':d>0?'높은':'낮은'} 경향이 관찰되었습니다 (${f1(a)} → ${f1(b)}).`)});
+ if(sm.length&&list.length>=5&&bf.length>=5)sm.push('다만 이 기록만으로 실험이 원인이었다고 단정할 수는 없어요.');
+ return h+`<div class="card"><h2>${esc(pname(p))}</h2><div class="mut">${p.start} 시작 · ${p.status==='active'?'진행 중':'마무리됨'}</div><p><b>나의 가설</b><br>${esc(p.hyp||'(적지 않음)')}</p><p><b>내가 바꾼 것</b><br>${esc(p.change)}</p><h3>실험 결과</h3><table><tr><th></th><th>실험 전 평균</th><th>실험 중 평균</th><th>변화량</th></tr>${rows}</table><p>목표 행동을 기록한 날: <b>${ac}일</b> / 기록한 날 ${list.length}일</p><h3>요약</h3>${ul(sm)}${list.length?chart(list,p.days):''}<h3>이번 실험 중 발견한 패턴</h3>${ul(insights(list).F)}<h3>직접 느낀 변화</h3><textarea oninput="P('${p.id}').felt=this.value;save()">${esc(p.felt)}</textarea><h3>이번 실험에서 알게 된 것</h3><textarea oninput="P('${p.id}').learned=this.value;save()">${esc(p.learned)}</textarea><p class="mut">나에게 맞았던 것 / 맞지 않았던 것도 함께 적어보세요.</p>${p.status==='done'&&!act()?'<button class="pri" onclick="go(\'exp\')">다음 30일에는 무엇을 실험해볼까요?</button>':''}</div>`}
+/* ---------- 실험 ---------- */
+function startPhase(type){const n=S.phases.filter(p=>p.type==='experiment').length+1;let c='',h='',t='';
+ if(type==='experiment'){c=$('#xc').value.trim();h=$('#xh').value.trim();if(!c){msg='바꿀 것을 한 줄로 적어주세요.';return render()}t=c}
+ S.phases.push({id:'p'+Date.now(),type,n:type==='observe'?0:n,title:t,change:c,hyp:h,start:S.logs[td()]&&type==='experiment'?addD(td(),1):td(),days:30,status:'active',learned:'',felt:''});
+ foc=null;save();msg=type==='observe'?'첫 30일의 관찰을 시작했어요. 오늘은 바꾸지 말고, 그냥 관찰해요.':'새 30일 실험을 시작했어요.';editDate=td();draft={...(S.logs[editDate]||{})};tab='today';render();scrollTo(0,0)}
+function finish(){const p=act();if(p.type==='observe'&&dif(td(),p.start)+1<=p.days){cf='';return render()}p.status='done';p.endedAt=td();save();cf='';msg=p.type==='observe'?'30일 관찰을 마쳤어요. 나의 첫 30일 리포트예요.':'이 실험을 마쳤어요. 결과를 살펴보세요.';viewId=p.id;tab='hist';render();scrollTo(0,0)}
+function sug(c,h){$('#xc').value=c;$('#xh').value=h;$('#xc').scrollIntoView({block:'center',behavior:'smooth'})}
+function vExp(){const p=act();
+ if(!S.phases.length)return `<div class="card"><h2>🔎 첫 30일: 나를 관찰하기</h2><blockquote class="q">첫 30일 동안은 나를 바꾸지 않습니다.<br>잘하려고 하지 않아도 됩니다.<br>그냥 내가 어떻게 살아가고 있는지를 관찰합니다.</blockquote><p>목표 달성률이나 연속 기록은 없어요. 기록하지 못한 날도, 아무것도 하지 않은 날도 모두 관찰 기록이에요.</p><p>30일이 지나면 ‘나의 첫 30일’ 리포트에서 내가 어떤 상황에서 어떻게 달라지는지 살펴보고, 그 다음 30일부터 나에게 맞는 작은 변화를 하나씩 실험해요.</p><p class="mut">이 앱은 의료·진단 도구가 아니라 자기 관찰과 생활 실험을 돕는 기록장이에요.</p><button class="pri" onclick="startPhase('observe')">나를 관찰하는 30일 시작하기</button></div>`;
+ if(p){const day=Math.max(1,Math.min(dif(td(),p.start)+1,p.days)),over=dif(td(),p.start)+1>p.days;
+  return `<div class="card"><div class="mut">${p.type==='observe'?'🔎':'🧪'} 진행 중</div><h2>${esc(pname(p))}</h2>${p.type==='experiment'?`<p><b>나의 가설</b><br>${esc(p.hyp||'(적지 않음)')}</p><p><b>내가 바꿀 것</b><br>${esc(p.change)}</p>`:'<blockquote class="q">첫 30일 동안은 나를 바꾸지 않습니다.<br>잘하려고 하지 않아도 됩니다.<br>그냥 내가 어떻게 살아가고 있는지를 관찰합니다.</blockquote>'}<p>${day} / ${p.days}일째 · 기록한 날 ${plogs(p).length}일</p><div class="bar"><i style="width:${day/p.days*100}%"></i></div>${over?'<p class="note">30일이 지났어요. 이제 30일 관찰을 마치고 결과를 볼 수 있어요.</p>':''}<p><button class="gh" onclick="view('${p.id}')">지금까지의 결과 보기</button>${cf==='fin'?`<span>${p.type==='observe'?'30일 관찰을 마칠까요? 나의 첫 30일 리포트로 이동해요.':'이 실험을 마치고 결과를 볼까요?'} <button class="pri" onclick="finish()">네, 결과 볼게요</button> <button class="gh" onclick="ask('')">조금 더 기록할게요</button></span>`:`${p.type==='observe'&&!over?'<span class="mut">30일 관찰은 '+addD(p.start,p.days)+' 이후에 마칠 수 있어요. 그 전에도 ‘지금까지의 결과 보기’로 중간 결과를 볼 수 있어요.</span>':'<button class="gh" onclick="ask(\'fin\')">'+(p.type==='observe'?'30일 관찰을 마치고 결과 보기':'실험을 마치고 결과 보기')+'</button>'}`}</p></div>`}
+ const n=S.phases.filter(q=>q.type==='experiment').length+1;
+ if(foc===null&&S.phases.some(q=>q.status==='done'))return `<div class="card"><h2>🧪 다음 30일에는 무엇을 실험해볼까요?</h2>`+chooser()+'</div>';
+ return `<div class="card"><h2>🧪 다음 30일에는 무엇을 실험해볼까요?</h2><p class="mut">30일 실험 ${P2(n)} · 작은 변화 하나만 정해서, 나에게 맞는지 살펴봐요.</p>${sugHTML()}<h3>다른 아이디어</h3><div>${[['매일 10분 밖에 나가기','하루 10분이라도 밖에 나가면 기분이 조금 나아질 것이다.'],['오전에 햇빛 보러 나가기','오전에 햇빛을 쬐면 에너지가 나아질 것이다.'],['자기 전 휴대폰 사용 줄이기','자기 전 휴대폰을 줄이면 수면 만족도가 높아질 것이다.'],['하루 한 번 사람과 대화하기','짧게라도 대화하면 기분이 나아질 것이다.']].map(a=>`<span class="chip" onclick="sug('${a[0]}','${a[1]}')">${a[0]}</span>`).join('')}</div><h3>나의 가설</h3><textarea id="xh" placeholder="예: 하루에 10분이라도 밖에 나가면 내 기분이 조금 나아질 것이다."></textarea><h3>내가 바꿀 것</h3><input id="xc" placeholder="예: 매일 10분 이상 외출"><p class="mut">실험 기간: 30일</p><button class="pri" onclick="startPhase('experiment')">30일 실험 시작하기</button></div>`}
+/* ---------- 기록 ---------- */
+function vLog(){const p=act();if(!p)return '<div class="card"><h2>기록</h2><p>진행 중인 구간이 없어요.</p></div>';
+ let g='';for(let i=0;i<p.days;i++){const d=addD(p.start,i),r=S.logs[d]&&S.logs[d].pid===p.id;g+=`<button class="${r?'rec':''}" ${d>td()?'disabled':''} onclick="openDate('${d}')" title="${d}">${i+1}</button>`}
+ const L=plogs(p).reverse();
+ return `<div class="card"><div class="mut">${esc(pname(p))}</div><h2>일별 기록</h2><p class="mut">채워진 칸이 기록한 날이에요. 비어 있는 칸은 ‘기록하지 못한 날’이고, 눌러서 나중에 적을 수도 있어요.</p><div class="grid">${g}</div></div>`+(L.length?`<div class="card"><h3>최근 기록</h3>${L.slice(0,15).map(l=>`<p style="cursor:pointer" onclick="openDate('${l.d}')"><b>${l.d}</b> · 기분 ${l.mood||'–'} · 에너지 ${l.energy||'–'}${l.good?'<br><span class="mut">'+esc(l.good).slice(0,60)+'</span>':''}</p>`).join('')}</div>`:'')}
+/* ---------- 실험 기록 + 백업 ---------- */
+function dl(){try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,1)],{type:'application/json'}));a.download='30일실험실-백업-'+td()+'.json';a.click()}catch(e){}bk=JSON.stringify(S);msg='파일로 내려받아지지 않으면 아래 백업 내용을 복사해 보관해 주세요.';render()}
+function rest(t){try{const j=JSON.parse(t);if(!j||!Array.isArray(j.phases)||typeof j.logs!=='object')throw 0;S={phases:j.phases,logs:j.logs};save();draft={...(S.logs[editDate]||{})};msg='복원했어요.'}catch(e){msg='복원할 수 없는 내용이에요. 백업 JSON을 확인해 주세요.'}render()}
+function wipe(){S={phases:[],logs:{}};save();draft={};cf='';bk='';msg='모든 기록을 지웠어요. 처음부터 다시 관찰할 수 있어요.';render()}
+function vHist(){if(viewId&&P(viewId))return vResult(P(viewId));
+ let h='<div class="card"><h2>실험 기록</h2>'+(S.phases.length?[...S.phases].reverse().map(p=>`<p>${p.type==='observe'?'🔎':'🧪'} <b>${esc(pname(p))}</b><br><span class="mut">${p.start} 시작 · ${p.status==='active'?'진행 중':'마무리됨'} · 기록 ${plogs(p).length}일</span><br><button class="gh" onclick="view('${p.id}')">결과 보기</button></p>`).join(''):'<p class="mut">아직 완료한 실험이 없어요.</p>')+'</div>';
+ h+=`<div class="card"><h3>데이터 관리</h3><p class="mut">모든 기록은 이 브라우저에만 저장돼요. 서버로 전송되지 않아요.</p><button class="gh" onclick="dl()">백업 파일 만들기</button><button class="gh" onclick="bk=JSON.stringify(S);render()">백업 내용 보기</button>${bk?`<textarea readonly onclick="this.select()">${esc(bk)}</textarea>`:''}<h3>복원</h3><input type="file" accept=".json,application/json" onchange="const f=this.files[0];if(f){const r=new FileReader();r.onload=()=>rest(r.result);r.readAsText(f)}"><p class="mut">또는 백업 내용을 붙여넣기:</p><textarea id="rt"></textarea><button class="gh" onclick="rest($('#rt').value)">붙여넣은 내용으로 복원</button><h3>처음부터 다시</h3>${cf==='wipe'?`<button class="pri" onclick="wipe()">네, 모두 지울게요</button> <button class="gh" onclick="ask('')">취소</button>`:`<button class="gh" onclick="ask('wipe')">모든 기록 지우기</button>`}</div>`;return h}
+function render(){const y=scrollY;const V={today:vToday,exp:vExp,log:vLog,ana:vAna,hist:vHist}[tab]();$('#app').innerHTML=(msg?`<div class="toast">${esc(msg)}</div>`:'')+V+'<div class="ft">🔬 30-Day Lab · Crafted by jeehojeeyo × Claude</div>';msg='';document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));scrollTo(0,y)}
+if(!S.phases.length)tab='exp';render();
+</script></body></html>
